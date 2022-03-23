@@ -133,7 +133,6 @@ public:
 	//                             ^ Camera
 	void CalculateFrustrumPlanes( CVector3 points[6], CVector3 vectors[6] );
 
-
 private:
 	// Current positioning matrix
 	CMatrix4x4 m_Matrix;

@@ -134,7 +134,23 @@ bool CCamera::PixelFromWorldPt( CVector3 worldPt, TUInt32 ViewportWidth, TUInt32
 CVector3 CCamera::WorldPtFromPixel( TInt32 X, TInt32 Y, 
                                     TUInt32 ViewportWidth, TUInt32 ViewportHeight )
 {
-	return CVector3::kOrigin; // Placeholder code, fill in for User Interface assignment task
+	CVector4 cameraPt;
+	CVector2 pixelPt;
+	pixelPt.x = X;
+	pixelPt.y = Y;
+
+	cameraPt.x = pixelPt.x / (ViewportWidth * 0.5f) - 1.0f;
+	cameraPt.y = 1.0f - pixelPt.y / (ViewportHeight * 0.5f);
+	cameraPt.z = 0;
+	cameraPt.w = m_NearClip;
+
+	cameraPt.x *= cameraPt.w;
+	cameraPt.y *= cameraPt.w;
+	cameraPt.z *= cameraPt.w;
+
+	CVector4 worldPt = cameraPt * Inverse(m_MatViewProj);
+
+	return CVector3(worldPt); // Placeholder code, fill in for User Interface assignment task
 }
 
 

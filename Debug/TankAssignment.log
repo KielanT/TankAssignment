@@ -1,32 +1,7 @@
-﻿  Camera.cpp
-  Entity.cpp
-  EntityManager.cpp
-  Light.cpp
-  Messenger.cpp
-  CFatalException.cpp
-  CHashTable.cpp
-  CTimer.cpp
-  MSDefines.cpp
-  Utility.cpp
-  Mesh.cpp
-  RenderMethod.cpp
-  CImportXFile.cpp
-  ShellEntity.cpp
-  TankEntity.cpp
-  Input.cpp
-  BaseMath.cpp
-  CMatrix2x2.cpp
-  CMatrix3x3.cpp
-  CMatrix4x4.cpp
-  Generating Code...
-  Compiling...
-  CQuaternion.cpp
-  CQuatTransform.cpp
-  CVector2.cpp
-  CVector3.cpp
-  CVector4.cpp
-  MathIO.cpp
-  MainApp.cpp
-  TankAssignment.cpp
-  Generating Code...
+﻿  TankEntity.cpp
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(262,60): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(262,29): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(263,60): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(263,29): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.cpp(77,33): warning C4244: '=': conversion from 'gen::TInt32' to 'gen::TFloat32', possible loss of data
   TankAssignment.vcxproj -> D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\TankAssignment.exe

@@ -58,14 +58,14 @@ extern TEntityUID GetTankUID( int team );
 // class constructor
 CTankEntity::CTankEntity
 (
-	CTankTemplate*  tankTemplate,
+	CTankTemplate* tankTemplate,
 	TEntityUID      UID,
 	TUInt32         team,
-	const string&   name /*=""*/,
-	const CVector3& position /*= CVector3::kOrigin*/, 
+	const string& name /*=""*/,
+	const CVector3& position /*= CVector3::kOrigin*/,
 	const CVector3& rotation /*= CVector3( 0.0f, 0.0f, 0.0f )*/,
 	const CVector3& scale /*= CVector3( 1.0f, 1.0f, 1.0f )*/
-) : CEntity( tankTemplate, UID, name, position, rotation, scale )
+) : CEntity(tankTemplate, UID, name, position, rotation, scale)
 {
 	m_TankTemplate = tankTemplate;
 
@@ -77,6 +77,10 @@ CTankEntity::CTankEntity
 	m_HP = m_TankTemplate->GetMaxHP();
 	m_State = EState::InActive;
 	m_Timer = 0.0f;
+	m_AimTimer = 1.0f;
+
+	m_ChaseCam = new CCamera({ Position().x, Position().y + 3.0f, Position().z });
+	m_ChaseCam->SetNearFarClip(1.0f, 20000.0f);
 }
 
 
@@ -85,6 +89,13 @@ CTankEntity::CTankEntity
 // Return false if the entity is to be destroyed
 bool CTankEntity::Update( TFloat32 updateTime )
 {
+	CMatrix4x4 tankMatrix = Matrix(1) * Matrix();
+	CVector3 facingVector = tankMatrix.ZAxis();
+	facingVector.Normalise();
+
+	m_ChaseCam->Position() = Position() - facingVector * 15.0f + tankMatrix.YAxis() * 3.0f;
+	m_ChaseCam->Matrix().FaceTarget(tankMatrix.Position());
+
 	// Fetch any messages
 	SMessage msg;
 	while (Messenger.FetchMessage( GetUID(), &msg ))
@@ -111,14 +122,23 @@ bool CTankEntity::Update( TFloat32 updateTime )
 				m_State = EState::Evade;
 				break;
 			case Msg_Hit:
-				m_HP -= 20.0f;
+				Hit();
+				break;
+			case MSg_FindAmmo:
+				m_IsMoving = false;
+				m_State = EState::FindAmmo;
+				break;
+			case Msg_Help:
+				m_State = EState::Help;
+			case Msg_Death:
+				Death(updateTime);
 				break;
 		}
 	}
 
 	if (m_State == EState::InActive)
 	{
-		IsMoving = false;
+		m_IsMoving = false;
 	}
 	else if (m_State == EState::Patrol)
 	{
@@ -132,42 +152,426 @@ bool CTankEntity::Update( TFloat32 updateTime )
 	{
 		Evade(updateTime);
 	}
+	else if (m_State == EState::FindAmmo)
+	{
+		FindAmmo(updateTime);
+	}
+	else if (m_State == EState::Help)
+	{
+		Help(updateTime);
+	}
 
-	if (m_HP <= 0) return false;
+	if (m_HP <= 0) return Death(updateTime);
 
 	//// Perform movement...
 	//// Move along local Z axis scaled by update time
-	if (IsMoving)
+	if (m_IsMoving)
 	{
 		Matrix().MoveLocalZ(m_Speed * updateTime);
-		Matrix(2).RotateLocalY(.5f * updateTime);
 	}
+
+	
+
+
+
 
 	return true; // Don't destroy the entity
 }
 
 void CTankEntity::Patrol(float frameTime)
 {
-	IsMoving = true;
-	m_Speed = 10.0f;
-	Matrix().FaceTarget(m_Target);
-	
-
-	if (Distance(Position(), m_Target) < 2.0f)
-	{
-		if (m_Target == m_PtOne) m_Target = m_PtTwo;
-		else if (m_Target == m_PtTwo) m_Target = m_PtOne;
+	if (!m_IsMoving)
+	{		
+		m_Target = m_PtTwo;
+		m_IsMoving = true;
 	}
-	
+	else
+	{
+		Matrix(2).RotateLocalY(m_TankTemplate->GetTurretTurnSpeed() * frameTime);
+
+		CMatrix4x4 turretMatrix = Matrix(2) * Matrix();
+
+		CVector3 facingVector = turretMatrix.ZAxis();
+		facingVector.Normalise();
+		CVector3 endPos = Position() + facingVector * 30.0f;
+
+		/*if (!test)
+		{
+			EntityManager.CreateEntity("Tree", "Tree" + m_Team, endPos);
+			test = true;
+		}
+		else
+		{
+			EntityManager.GetEntity("Tree" + m_Team)->Matrix().SetPosition(endPos);
+		}*/
+
+		CEntity* entity;
+		EntityManager.BeginEnumEntities("", "", "Tank");
+		while (entity = EntityManager.EnumEntity())
+		{
+			CTankEntity* TEntity = static_cast<CTankEntity*>(entity);
+			if (TEntity != nullptr && m_Team != TEntity->GetTeam())
+			{
+				if (Distance(endPos, TEntity->Position()) < 25.0f)
+				{
+					SMessage msg;
+					msg.type = Msg_Aim;
+					msg.from = GetUID();
+
+					m_EnemyTarget = TEntity->Position();
+
+					Messenger.SendMessageA(GetUID(), msg);
+				}
+			}
+		}
+		EntityManager.EndEnumEntities();
+
+		Matrix().ZAxis().Normalise();
+		Matrix().XAxis().Normalise();
+		CVector3 target = m_Target - Position();
+		target.Normalise();
+
+		float productX = Dot(Matrix().XAxis(), target);
+		float productZ = Dot(Matrix().ZAxis(), target);
+		float angle = acos(productZ);
+
+		float turnSpeed = ToRadians(m_TankTemplate->GetTurnSpeed());
+		if (productX > 0)
+		{
+			// Turn Right
+			Matrix().RotateY(Min(turnSpeed, angle));
+		}
+		else
+		{
+			Matrix().RotateY(-Min(turnSpeed, angle));
+		}
+
+		if (Distance(Position(), m_Target) > 2.0f)
+		{
+			m_Speed += m_TankTemplate->GetAcceleration() * frameTime;
+			if (m_Speed > m_TankTemplate->GetMaxSpeed())
+			{
+				m_Speed = m_TankTemplate->GetMaxSpeed();
+			}
+		}
+		else
+		{
+			m_Speed -= m_TankTemplate->GetAcceleration() * frameTime;
+			if (m_Speed < 0.0f)
+			{
+				if (m_Target == m_PtOne)
+				{
+					m_PtTwo = SelectWaypoint();
+					m_Target = m_PtTwo;
+				}
+				else if (m_Target == m_PtTwo)
+				{
+					m_PtOne = SelectWaypoint();
+					m_Target = m_PtOne;
+				}
+			}
+		}
+	}
 }
 
 void CTankEntity::Aim(float frameTime)
 {
+	m_Speed = 0.0f;
+	Matrix(2).FaceDirection(m_EnemyTarget);
+	if (m_ShellsAmmo > 0)
+	{
+		if (m_AimTimer < 0.0f)
+		{
+			if (!m_Fired)
+			{
+				EntityManager.CreateShell("Shell Type 1", m_EnemyTarget, this, "", { Position().x, 1.8f, Position().z });
+				m_ShellsShot++;
+				m_ShellsAmmo--;
+				m_AimTimer = 1.0f;
+				m_Fired = true;
+				SMessage msg;
+				msg.type = Msg_Evade;
+				msg.from = SystemUID;
 
+				Messenger.SendMessageA(GetUID(), msg);
+			}
+		}
+		else
+		{
+			m_AimTimer -= frameTime;
+		}
+	}
+	else
+	{
+		SMessage msg;
+		msg.type = MSg_FindAmmo;
+		msg.from = SystemUID;
+		Messenger.SendMessageA(GetUID(), msg);
+	}
 }
 
 void CTankEntity::Evade(float frameTime)
 {
+	m_Fired = false;
+	SetRandomTarget();
+	m_EvadeStart = true;
+	if (m_IsMoving)
+	{
+		Matrix().FaceTarget(m_Target);
+		Matrix(2).FaceDirection(m_Target);
+	}
+
+	if (m_ShellsAmmo <= 0)
+	{
+		SMessage msg;
+		msg.type = MSg_FindAmmo;
+		msg.from = SystemUID;
+		Messenger.SendMessageA(GetUID(), msg);
+	}
+
+	Matrix().ZAxis().Normalise();
+	Matrix().XAxis().Normalise();
+	CVector3 target = m_Target - Position();
+	target.Normalise();
+
+	float productX = Dot(Matrix().XAxis(), target);
+	float productZ = Dot(Matrix().ZAxis(), target);
+	float angle = acos(productZ);
+
+	float turnSpeed = ToRadians(m_TankTemplate->GetTurnSpeed());
+	if (productX > 0)
+	{
+		// Turn Right
+		Matrix().RotateY(Min(turnSpeed, angle));
+	}
+	else
+	{
+		Matrix().RotateY(-Min(turnSpeed, angle));
+	}
+
+	if (Distance(Position(), m_Target) > 2.0f)
+	{
+		m_Speed += m_TankTemplate->GetAcceleration() * frameTime;
+		if (m_Speed > m_TankTemplate->GetMaxSpeed())
+		{
+			m_Speed = m_TankTemplate->GetMaxSpeed();
+		}
+	}
+	else
+	{
+		m_IsMoving = false;
+		m_EvadeStart = false;
+		m_State = EState::Patrol;
+
+		m_Speed -= m_TankTemplate->GetAcceleration() * frameTime;
+		if (m_Speed < 0.0f)
+		{
+			if (m_Target == m_PtOne)
+			{
+				m_PtTwo = SelectWaypoint();
+				m_Target = m_PtTwo;
+			}
+			else if (m_Target == m_PtTwo)
+			{
+				m_PtOne = SelectWaypoint();
+				m_Target = m_PtOne;
+			}
+		}
+	}
+
+}
+
+void CTankEntity::Hit()
+{
+	m_HP -= m_TankTemplate->GetShellDamage();
+	SMessage msg;
+	msg.type = Msg_Help;
+	msg.from = SystemUID;
+
+	CEntity* entityLoop;
+	EntityManager.BeginEnumEntities("", "", "Tank");
+	while (entityLoop = EntityManager.EnumEntity())
+	{
+		CTankEntity* TEntity = static_cast<CTankEntity*>(entityLoop);
+		if (TEntity != nullptr && TEntity->GetTeam() == m_Team)
+		{
+			Messenger.SendMessageA(TEntity->GetUID(), msg);
+		}
+	}
+	EntityManager.EndEnumEntities();
+
+	
+}
+
+void CTankEntity::FindAmmo(float frameTime)
+{
+	CEntity* entity;
+	CEntity* entityLoop;
+	CVector3 nearestAmmoPos = CVector3(Random(-30.0f, 30.0f), Position().y, Random(-30.0f, 30.0f));
+	EntityManager.BeginEnumEntities("", "", "AmmoBox");
+	float nearest = 20.0f;
+	while (entityLoop = EntityManager.EnumEntity())
+	{
+		CAmmoBoxEntity* AEntity = static_cast<CAmmoBoxEntity*>(entityLoop);
+		if (AEntity != nullptr)
+		{
+			if (Distance(Position(), AEntity->Position()) < nearest)
+			{
+				nearestAmmoPos = AEntity->Position();
+				entity = entityLoop;
+			}
+		}
+	}
+	EntityManager.EndEnumEntities();
+
+	if (!m_IsMoving)
+	{
+		m_NearestAmmoTarget = nearestAmmoPos;
+		m_IsMoving = true;
+	}
+	else
+	{
+		Matrix(2).RotateLocalY(m_TankTemplate->GetTurretTurnSpeed() * frameTime);
+
+		Matrix().ZAxis().Normalise();
+		Matrix().XAxis().Normalise();
+		CVector3 target = m_NearestAmmoTarget - Position();
+		target.Normalise();
+
+		float productX = Dot(Matrix().XAxis(), target);
+		float productZ = Dot(Matrix().ZAxis(), target);
+		float angle = acos(productZ);
+
+		float turnSpeed = ToRadians(m_TankTemplate->GetTurnSpeed());
+		if (productX > 0)
+		{
+			// Turn Right
+			Matrix().RotateY(Min(turnSpeed, angle));
+		}
+		else
+		{
+			Matrix().RotateY(-Min(turnSpeed, angle));
+		}
+
+		if (Distance(Position(), m_NearestAmmoTarget) > 2.0f)
+		{
+			m_Speed += m_TankTemplate->GetAcceleration() * frameTime;
+			if (m_Speed > m_TankTemplate->GetMaxSpeed())
+			{
+				m_Speed = m_TankTemplate->GetMaxSpeed();
+			}
+		}
+		else
+		{
+			m_Speed -= m_TankTemplate->GetAcceleration() * frameTime;
+			if (m_Speed < 0.0f)
+			{
+				if (entity != nullptr)
+				{
+					CAmmoBoxEntity* AEntity = static_cast<CAmmoBoxEntity*>(entity);
+					if (AEntity != nullptr)
+					{
+						m_ShellsAmmo = 10;
+						entity = nullptr;
+						nearestAmmoPos = CVector3(Random(-30.0f, 30.0f), Position().y, Random(-30.0f, 30.0f));
+						SMessage msg1;
+						msg1.type = Msg_CollectedAmmo;
+						msg1.from = GetUID();
+						Messenger.SendMessageA(AEntity->GetUID(), msg1);
+						
+					}
+				}
+				
+			}
+				SMessage msg;
+				msg.type = Msg_Patrol;
+				msg.from = SystemUID;
+				Messenger.SendMessageA(GetUID(), msg);
+		}
+	}
+	
+}
+
+void CTankEntity::Help(float frameTime)
+{
+	m_Speed = 0.0f;
+	if (m_HelpTimer < 0.0f)
+	{
+		// Go back to patrol
+		SMessage msg;
+		msg.type = Msg_Patrol;
+		msg.from = SystemUID;
+		Messenger.SendMessageA(GetUID(), msg);
+	}
+	else
+	{
+		m_HelpTimer -= frameTime;
+
+		CEntity* entityLoop;
+		CVector3 NearestTankPos = CVector3(Random(-30.0f, 30.0f), Position().y, Random(-30.0f, 30.0f));
+		EntityManager.BeginEnumEntities("", "", "Tank");
+		float nearest = 20.0f;
+		while (entityLoop = EntityManager.EnumEntity())
+		{
+			CTankEntity* AEntity = static_cast<CTankEntity*>(entityLoop);
+			if (AEntity != nullptr)
+			{
+				// if found reset timer and go to aim state starting ememy target
+				if (Distance(Position(), AEntity->Position()) < nearest)
+				{
+					m_EnemyTarget = entityLoop->Position();
+					m_HelpTimer = m_HelpTimerMax;
+					SMessage msg;
+					msg.type = Msg_Aim;
+					msg.from = SystemUID;
+					Messenger.SendMessageA(GetUID(), msg);
+				}
+			}
+		}
+		EntityManager.EndEnumEntities();
+
+		
+	}
+}
+
+void CTankEntity::SetRandomTarget()
+{
+	if (!m_EvadeStart)
+	{
+		m_Target = CVector3(Random(-40.0f, 40.0f), Position().y, Random(-40.0f, 40.0f)); // TODO make this return a different random vector each time
+	}
+}
+
+bool CTankEntity::Death(float frameTime)
+{
+	if (m_DeathTimer < 0.0f)
+	{
+		
+		if (m_Team == 0)
+		{
+			EntityManager.TeamTwoScore();
+		}
+		else if (m_Team == 1)
+		{
+			EntityManager.TeamOneScore();
+		}
+		return false;
+	}
+	else
+	{
+		m_DeathTimer -= frameTime;
+		Matrix(2).MoveLocalY(m_DestroyedSpeed * frameTime);
+		Matrix(2).RotateLocalX(m_DeathTurretSpeed * frameTime);
+		Matrix(2).RotateLocalY(m_DeathTurretSpeed * frameTime);
+
+		Matrix().RotateLocalY(m_DeathTankSpeed * frameTime);
+	}
+	return true;
+}
+
+CVector3 CTankEntity::SelectWaypoint()
+{
+	return EntityManager.GetPatrolPoints(m_Team).PatrolPoints;
 }
 
 

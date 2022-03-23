@@ -12,6 +12,7 @@ using namespace std;
 #include "Defines.h"
 #include "CVector3.h"
 #include "Entity.h"
+#include "TankEntity.h"
 
 namespace gen
 {
@@ -42,10 +43,12 @@ public:
 	(
 		CEntityTemplate* entityTemplate,
 		TEntityUID       UID,
-		const string&    name = "",
-		const CVector3&  position = CVector3::kOrigin, 
-		const CVector3&  rotation = CVector3( 0.0f, 0.0f, 0.0f ),
-		const CVector3&  scale = CVector3( 1.0f, 1.0f, 1.0f )
+		CVector3 target,
+		CTankEntity* ParentEntity,
+		const string& name = "",
+		const CVector3& position = CVector3::kOrigin,
+		const CVector3& rotation = CVector3(0.0f, 0.0f, 0.0f),
+		const CVector3& scale = CVector3(1.0f, 1.0f, 1.0f)
 	);
 
 	// No destructor needed
@@ -63,7 +66,6 @@ public:
 	// Keep as a virtual function in case of further derivation
 	virtual bool Update( TFloat32 updateTime );
 	
-
 /////////////////////////////////////
 //	Private interface
 private:
@@ -72,6 +74,13 @@ private:
 	// Data
 
 	// Add your shell data here
+	TFloat32 m_Timer;
+
+	CVector3 m_Target;
+
+	TUInt32 m_Team;
+
+	CTankEntity* m_ParentEntity;
 };
 
 

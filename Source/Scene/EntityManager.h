@@ -15,6 +15,7 @@ using namespace std;
 #include "Entity.h"
 #include "TankEntity.h"
 #include "ShellEntity.h"
+#include "AmmoBoxEntity.h"
 #include "Camera.h"
 
 namespace gen
@@ -58,6 +59,7 @@ public:
 	                                                   float acceleration, float turnSpeed,
 	                                                   float turretTurnSpeed, int maxHP, int shellDamage );
 
+	CAmmoBoxTemplate* CEntityManager::CreateAmmoBoxTemplate(const string& type, const string& name, const string& mesh, float gravity = -9.81f);
 
 	// Destroy the given template (name) - returns true if the template existed and was destroyed
 	bool DestroyTemplate( const string& name );
@@ -97,12 +99,22 @@ public:
 	TEntityUID CreateShell
 	(
 		const string&   templateName,
+		CVector3 target,
+		CTankEntity* ParentEntity,
 		const string&   name = "",
 		const CVector3& position = CVector3::kOrigin,
 		const CVector3& rotation = CVector3(0.0f, 0.0f, 0.0f),
 		const CVector3& scale = CVector3(1.0f, 1.0f, 1.0f)
 	);
 
+	TEntityUID CreateAmmoBox
+	(
+		const string& templateName,
+		const string& name = "",
+		const CVector3& position = CVector3(0.0f, 30.0f, 0.0f),
+		const CVector3& rotation = CVector3(0.0f, 0.0f, 0.0f),
+		const CVector3& scale = CVector3(0.5f, 0.5f, 0.5f)
+		);
 
 	// Destroy the given entity - returns true if the entity existed and was destroyed
 	bool DestroyEntity( TEntityUID UID );
@@ -218,6 +230,39 @@ public:
 		return 0;
 	}
 
+	struct SPatrolPoints
+	{
+		int teamNum;
+		CVector3 PatrolPoints;
+	};
+
+	void PushPatrolPoints(SPatrolPoints points) { m_PatrolPoints.push_back(points); }
+
+	SPatrolPoints GetPatrolPoints(int team)
+	{
+		SPatrolPoints pt;
+		pt = m_PatrolPoints[Random(0, m_PatrolPoints.size())];
+		if (team == 0)
+		{
+			while(pt.teamNum != 0)
+			{
+				pt = m_PatrolPoints[Random(0, m_PatrolPoints.size())];
+			}
+		}
+		else if (team == 1)
+		{
+			while (pt.teamNum != 1)
+			{
+				pt = m_PatrolPoints[Random(0, m_PatrolPoints.size())];
+			}
+		}
+		return pt;
+	}
+	void TeamOneScore() { m_TeamOneScore++; }
+	void TeamTwoScore() { m_TeamTwoScore++; }
+
+	int GetTeamOneScore() { return m_TeamOneScore; }
+	int GetTeamTwoScore() { return m_TeamTwoScore; }
 
 	/////////////////////////////////////
 	// Update / Rendering
@@ -276,6 +321,15 @@ private:
 	string      m_EnumName;
 	string      m_EnumTemplateName;
 	string      m_EnumTemplateType;
+
+
+	int m_TeamOneScore = 0;
+	int m_TeamTwoScore = 0;
+	
+
+	vector<SPatrolPoints> m_PatrolPoints;
+
+	
 };
 
 

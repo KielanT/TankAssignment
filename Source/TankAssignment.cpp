@@ -18,6 +18,7 @@ using namespace std;
 #include "EntityManager.h"
 #include "Messenger.h"
 #include "TankAssignment.h"
+#include "ParseLevel.h"
 
 namespace gen
 {
@@ -32,6 +33,7 @@ float CameraMoveSpeed = 80.0f;
 
 // Amount of time to pass before calculating new average update time
 const float UpdateTimePeriod = 1.0f;
+
 
 
 //-----------------------------------------------------------------------------
@@ -63,6 +65,7 @@ extern CMessenger Messenger;
 
 // Entity manager
 CEntityManager EntityManager;
+CParseLevel LevelParser(&EntityManager);
 
 // Tank UIDs
 TEntityUID TankA;
@@ -80,6 +83,17 @@ float SumUpdateTimes = 0.0f;
 int NumUpdateTimes = 0;
 float AverageUpdateTime = -1.0f; // Invalid value at first
 
+bool ShowText = false;
+bool gameOver = false;
+
+const float ammoMaxSpawnTime = 30.0f;
+const float ammoMinSpawnTime = 20.0f;
+float ammoSpawnTimer = ammoMaxSpawnTime;
+
+int teamOneScore = 0;
+int teamTwoScore = 0;
+
+string winningTeam = "";
 
 //-----------------------------------------------------------------------------
 // Scene management
@@ -90,57 +104,25 @@ bool SceneSetup()
 {
 	//////////////////////////////////////////////
 	// Prepare render methods
-
 	InitialiseMethods();
+	InitInput();
 
-
+	srand(time(NULL));
 	//////////////////////////////////////////
 	// Create scenery templates and entities
+	LevelParser.ParseFile("Scene.xml");
 
-	// Create scenery templates - loads the meshes
-	// Template type, template name, mesh name
-	EntityManager.CreateTemplate("Scenery", "Skybox", "Skybox.x");
-	EntityManager.CreateTemplate("Scenery", "Floor", "Floor.x");
-	EntityManager.CreateTemplate("Scenery", "Building", "Building.x");
-	EntityManager.CreateTemplate("Scenery", "Tree", "Tree1.x");
-
-	// Creates scenery entities
-	// Type (template name), entity name, position, rotation, scale
-	EntityManager.CreateEntity("Skybox", "Skybox", CVector3(0.0f, -10000.0f, 0.0f), CVector3::kZero, CVector3(10, 10, 10));
-	EntityManager.CreateEntity("Floor", "Floor");
-	EntityManager.CreateEntity("Building", "Building", CVector3(0.0f, 0.0f, 40.0f));
 	for (int tree = 0; tree < 100; ++tree)
 	{
+		
 		// Some random trees
 		EntityManager.CreateEntity( "Tree", "Tree",
 			                        CVector3(Random(-200.0f, 30.0f), 0.0f, Random(40.0f, 150.0f)),
 			                        CVector3(0.0f, Random(0.0f, 2.0f * kfPi), 0.0f) );
 	}
 
-
-	/////////////////////////////////
-	// Create tank templates
-
-	// Template type, template name, mesh name, top speed, acceleration, tank turn speed, turret
-	// turn speed, max HP and shell damage. These latter settings are for advanced requirements only
-	EntityManager.CreateTankTemplate("Tank", "Rogue Scout", "HoverTank02.x",
-		24.0f, 2.2f, 2.0f, kfPi / 3, 100, 20);
-	EntityManager.CreateTankTemplate("Tank", "Oberon MkII", "HoverTank07.x",
-		18.0f, 1.6f, 1.3f, kfPi / 4, 120, 35);
-
-	// Template for tank shell
-	EntityManager.CreateTemplate("Projectile", "Shell Type 1", "Bullet.x");
-
-
-	////////////////////////////////
-	// Create tank entities
-
-	// Type (template name), team number, tank name, position, rotation
-	TankA = EntityManager.CreateTank("Rogue Scout", 0, "A-1", CVector3(-30.0f, 0.5f, -20.0f),
-		CVector3(0.0f, ToRadians(0.0f), 0.0f));
-	TankB = EntityManager.CreateTank("Oberon MkII", 1, "B-1", CVector3(30.0f, 0.5f, 20.0f),
-		CVector3(0.0f, ToRadians(180.0f), 0.0f));
-
+	
+	
 
 	/////////////////////////////
 	// Camera / light setup
@@ -273,45 +255,75 @@ void RenderSceneText( float updateTime )
 		outText.str("");
 	}
 
-	if (EntityManager.GetEntity(TankA) != nullptr)
+	outText << "Team One Score:  " << EntityManager.GetTeamOneScore() << "\nTeam Two Score: " << EntityManager.GetTeamTwoScore();
+	RenderText(outText.str(), 500, 10, 0.0f, 0.0f, 0.0f);
+	RenderText(outText.str(), 498, 8, 1.0f, 1.0f, 0.0f);
+	outText.str("");
+	
+	if (gameOver)
 	{
-		int x, y;
-		CVector3 pos = EntityManager.GetEntity(TankA)->Position();
+		outText << "Team " << winningTeam << " Wins!";
+		RenderText(outText.str(), 500, 500, 0.0f, 0.0f, 0.0f);
+		RenderText(outText.str(), 498, 498, 1.0f, 1.0f, 0.0f);
+		outText.str("");
+	}
+	
+	CEntity* entity;
+	int x, y;
+	EntityManager.BeginEnumEntities("", "", "Tank");
+	while (entity = EntityManager.EnumEntity())
+	{
+		CTankEntity* TEntity = static_cast<CTankEntity*>(entity);
 
-		
-		if (MainCamera->PixelFromWorldPt(pos, ViewportWidth, ViewportHeight, &x, &y))
+		if (TEntity != nullptr)
 		{
-			outText << EntityManager.GetEntity(TankA)->GetName();
 
-			RenderText(outText.str(), x, y, 0.0f, 0.0f, 0.0f, true);
-			RenderText(outText.str(), x - 2, y - 2, 1.0f, 1.0f, 0.0f, true);
+			if (MainCamera->PixelFromWorldPt(TEntity->Position(), ViewportWidth, ViewportHeight, &x, &y))
+			{
+				outText << TEntity->GetName();
+
+				if (ShowText)
+				{
+					outText << "\n" << TEntity->GetState()		<< "\nHP: " << TEntity->GetHealth() 
+							<< "\nShot: " << TEntity->GetShellsShot() << "\nAmmo: " << TEntity->GetShellsAmmo();
+
+				}
+
+				RenderText(outText.str(), x, y, 0.0f, 0.0f, 0.0f, true);
+				RenderText(outText.str(), x - 2, y - 2, 1.0f, 1.0f, 0.0f, true);
+				outText.str("");
+			}
+		}
+	}
+	
+
+	EntityManager.BeginEnumEntities("", "", "AmmoBox");
+	while (entity = EntityManager.EnumEntity())
+	{
+		CAmmoBoxEntity* AEntity = static_cast<CAmmoBoxEntity*>(entity);
+		if (AEntity != nullptr && MainCamera->PixelFromWorldPt(AEntity->Position(), ViewportWidth, ViewportHeight, &x, &y))
+		{
+			outText << "Ammo Box";
+			RenderText(outText.str(), x, y - 40, 0.0f, 0.0f, 0.0f, true);
+			RenderText(outText.str(), x - 2, y - 42, 1.0f, 1.0f, 0.0f, true);
 			outText.str("");
 		}
 	}
-
-	if (EntityManager.GetEntity(TankB) != nullptr)
-	{
-		CVector3 pos = EntityManager.GetEntity(TankB)->Position();
-
-		int x, y;
-		if (MainCamera->PixelFromWorldPt(pos, ViewportWidth, ViewportHeight, &x, &y))
-		{
-			outText << EntityManager.GetEntity(TankB)->GetName();
-
-			RenderText(outText.str(), x, y, 0.0f, 0.0f, 0.0f, true);
-			RenderText(outText.str(), x - 2, y - 2, 1.0f, 1.0f, 0.0f, true);
-			outText.str("");
-		}
-	}
-
+	EntityManager.EndEnumEntities();
 }
 
 
 // Update the scene between rendering
-void UpdateScene( float updateTime )
+void UpdateScene(float updateTime)
 {
 	// Call all entity update functions
-	EntityManager.UpdateAllEntities( updateTime );
+	EntityManager.UpdateAllEntities(updateTime);
+	SpawnAmmoBox(updateTime);
+
+	if (KeyHit(Key_0))
+	{
+		ShowText = !ShowText;
+	}
 
 	if (KeyHit(Key_1))
 	{
@@ -319,37 +331,107 @@ void UpdateScene( float updateTime )
 		msg.type = Msg_Start;
 		msg.from = SystemUID;
 
-		Messenger.SendMessageA(TankA, msg);
-		Messenger.SendMessageA(TankB, msg);
+		CEntity* entity;
+		EntityManager.BeginEnumEntities("", "", "Tank");
+		while (entity = EntityManager.EnumEntity())
+		{
+			CTankEntity* TEntity = static_cast<CTankEntity*>(entity);
+
+			if (TEntity != nullptr)
+			{
+				Messenger.SendMessageA(TEntity->GetUID(), msg);
+			}
+		}
 	}
 	if (KeyHit(Key_2))
 	{
-		SMessage msg;
-		msg.type = Msg_Inactive;
-		msg.from = SystemUID;
-
-		Messenger.SendMessageA(TankA, msg);
-		Messenger.SendMessageA(TankB, msg);
+		SetTanksInactive();
 	}
+
 	if (KeyHit(Key_3))
 	{
-		SMessage msg;
-		msg.type = Msg_Hit;
-		msg.from = SystemUID;
+		CEntity* entity = EntityManager.GetEntity("A-1");
+		CTankEntity* TEntity = static_cast<CTankEntity*>(entity);
+		if (TEntity != nullptr)
+		{
+			MainCamera = TEntity->GetCamera();
+		}
+	}
 
-		Messenger.SendMessageA(TankA, msg);
-		//Messenger.SendMessageA(TankB, msg);
+	if (EntityManager.GetTeamOneScore() >= 3.0f)
+	{
+		SetTanksInactive();
+		winningTeam = "One";
+		gameOver = true;
+		DestroyLoserTanks(1);
+	}
+	else if (EntityManager.GetTeamTwoScore() >= 3.0f)
+	{
+		SetTanksInactive();
+		winningTeam = "Two";
+		gameOver = false;
+		DestroyLoserTanks(0);
 	}
 
 	// Set camera speeds
-	// Key F1 used for full screen toggle
-	if (KeyHit(Key_F2)) CameraMoveSpeed = 5.0f;
+		// Key F1 used for full screen toggle
+		if (KeyHit(Key_F2)) CameraMoveSpeed = 5.0f;
 	if (KeyHit(Key_F3)) CameraMoveSpeed = 40.0f;
 
 	// Move the camera
-	MainCamera->Control( Key_Up, Key_Down, Key_Left, Key_Right, Key_W, Key_S, Key_A, Key_D, 
-	                     CameraMoveSpeed * updateTime, CameraRotSpeed * updateTime );
+	MainCamera->Control(Key_Up, Key_Down, Key_Left, Key_Right, Key_W, Key_S, Key_A, Key_D,
+		CameraMoveSpeed * updateTime, CameraRotSpeed * updateTime);
 }
 
+void SpawnAmmoBox(float updateTime)
+{
+	if (ammoSpawnTimer < 0.0f)
+	{
+		EntityManager.CreateAmmoBox("AmmoBox", "AmmoBox", CVector3(Random(-30.0f, 30.0f), 30.0f, Random(-30.0f, 30.0f)));
+		ammoSpawnTimer = Random(ammoMinSpawnTime, ammoMaxSpawnTime);
+	}
+	else
+	{
+		ammoSpawnTimer -= updateTime;
+	}
+}
+
+void SetTanksInactive()
+{
+	SMessage msg;
+	msg.type = Msg_Inactive;
+	msg.from = SystemUID;
+
+	CEntity* entity;
+	EntityManager.BeginEnumEntities("", "", "Tank");
+	while (entity = EntityManager.EnumEntity())
+	{
+		CTankEntity* TEntity = static_cast<CTankEntity*>(entity);
+
+		if (TEntity != nullptr)
+		{
+			Messenger.SendMessageA(TEntity->GetUID(), msg);
+		}
+	}
+}
+
+void DestroyLoserTanks(int team)
+{
+	SMessage msg;
+	msg.type = Msg_Death;
+	msg.from = SystemUID;
+
+	CEntity* entity;
+	EntityManager.BeginEnumEntities("", "", "Tank");
+	while (entity = EntityManager.EnumEntity())
+	{
+		CTankEntity* TEntity = static_cast<CTankEntity*>(entity);
+
+		if (TEntity != nullptr && TEntity->GetTeam() == team)
+		{
+			Messenger.SendMessageA(TEntity->GetUID(), msg);
+		}
+	}
+}
 
 } // namespace gen

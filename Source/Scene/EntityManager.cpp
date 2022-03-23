@@ -67,6 +67,13 @@ CTankTemplate* CEntityManager::CreateTankTemplate(const string& type, const stri
 	return newTemplate;
 }
 
+CAmmoBoxTemplate* CEntityManager::CreateAmmoBoxTemplate(const string& type, const string& name, const string& mesh, float gravity)
+{
+	CAmmoBoxTemplate* newTemplate = new CAmmoBoxTemplate(type, name, mesh, gravity);
+	m_Templates[name] = newTemplate;
+	return newTemplate;
+}
+
 // Destroy the given template (name) - returns true if the template existed and was destroyed
 bool CEntityManager::DestroyTemplate( const string& name )
 {
@@ -172,6 +179,8 @@ TEntityUID CEntityManager::CreateTank
 TEntityUID CEntityManager::CreateShell
 (
 	const string&   templateName,
+	CVector3 target,
+	CTankEntity* ParentEntity,
 	const string&   name /*= ""*/,
 	const CVector3& position /*= CVector3::kOrigin*/,
 	const CVector3& rotation /*= CVector3( 0.0f, 0.0f, 0.0f )*/,
@@ -182,7 +191,7 @@ TEntityUID CEntityManager::CreateShell
 	CEntityTemplate* entityTemplate = GetTemplate(templateName);
 
 	// Create new tank entity with next UID
-	CEntity* newEntity = new CShellEntity(entityTemplate, m_NextUID,
+	CEntity* newEntity = new CShellEntity(entityTemplate, m_NextUID, target, ParentEntity,
 		name, position, rotation, scale);
 
 	// Get vector index for new entity and add it to vector
@@ -195,6 +204,27 @@ TEntityUID CEntityManager::CreateShell
 	m_IsEnumerating = false; // Cancel any entity enumeration (entity list has changed)
 
 							 // Return UID of new entity then increase it ready for next entity
+	return m_NextUID++;
+}
+
+TEntityUID CEntityManager::CreateAmmoBox(const string& templateName, const string& name, const CVector3& position, const CVector3& rotation, const CVector3& scale)
+{
+	// Get template associated with the template name
+	CAmmoBoxTemplate* entityTemplate = static_cast<CAmmoBoxTemplate*>(GetTemplate(templateName));
+
+	// Create new entity with next UID
+	CEntity* newEntity = new CAmmoBoxEntity(entityTemplate, m_NextUID, name, position, rotation, scale);
+
+	// Get vector index for new entity and add it to vector
+	TUInt32 entityIndex = static_cast<TUInt32>(m_Entities.size());
+	m_Entities.push_back(newEntity);
+
+	// Add mapping from UID to entity index into hash map
+	m_EntityUIDMap->SetKeyValue(m_NextUID, entityIndex);
+
+	m_IsEnumerating = false; // Cancel any entity enumeration (entity list has changed)
+
+	// Return UID of new entity then increase it ready for next entity
 	return m_NextUID++;
 }
 

@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<!-- Level Setup -->
+<Level>
+	<Templates>
+		<EntityTemplate Type="Scenery" Name="Skybox" Mesh="Skybox.x"/>
+		<EntityTemplate Type="Scenery" Name="Floor"	 Mesh="Floor.x"/>
+		<EntityTemplate Type="Scenery" Name="Building" Mesh="Building.x"/>
+		<EntityTemplate Type="Scenery" Name="Tree" Mesh="Tree1.x"/>
+
+		<EntityTemplate Type="AmmoBox" Name="AmmoBox" Mesh="Cube.x" Gravity="-9.81"/>
+		
+		<EntityTemplate Type="Tank" Name="Rogue Scout" Mesh="HoverTank02.x" 
+						MaxSpeed="24.0" Acceleration="2.2" TurnSpeed="2.0" TurretTurnSpeed="3" HP="100" ShellDamage="20"/>
+		<EntityTemplate Type="Tank" Name="Oberon MkII" Mesh="HoverTank07.x"
+						MaxSpeed="18.0" Acceleration="1.6" TurnSpeed="1.3" TurretTurnSpeed="4" HP="120" ShellDamage="35"/>
+		<EntityTemplate Type="Tank" Name="Tank8" Mesh="HoverTank08.x"
+						MaxSpeed="12.0" Acceleration="1.0" TurnSpeed="0.8" TurretTurnSpeed="1" HP="130" ShellDamage="50"/>
+		<EntityTemplate Type="Tank" Name="Tank4" Mesh="HoverTank06.x"
+						MaxSpeed="30.0" Acceleration="3.0" TurnSpeed="2.6" TurretTurnSpeed="8" HP="80" ShellDamage="5"/>
+		<EntityTemplate Type="Tank" Name="Tank6" Mesh="HoverTank06.x"
+						MaxSpeed="8.0" Acceleration="1.6" TurnSpeed="1.3" TurretTurnSpeed="2" HP="110" ShellDamage="65"/>
+
+		<EntityTemplate Type="Projectile" Name="Shell Type 1" Mesh="Bullet.x"/>
+	</Templates>
+	
+	
+	<Entities>
+		<Entity Type="Skybox" Name="Skybox">
+			<Position X="0.0" Y="-10000.0" Z="0.0"/>
+			<Scale X="10" Y="10" Z="10"/>
+		</Entity>
+		<Entity Type="Floor" Name="Floor"/>
+		<Entity Type="Building" Name="Building">
+			<Position X="0.0" Y="0.0" Z="40.0"/>
+		</Entity>
+
+		<Team Name="0">
+			<Entity Type="Rogue Scout" Name="A-1">
+				<Position X="-30.0" Y="0.5" Z="-20.0"/>
+			</Entity>
+			<Entity Type="Tank8" Name="A-2">
+				<Position X="-30.0" Y="0.5" Z="-10.0"/>
+				<Rotation X="0.0" Y="90.0" Z="0.0"/>
+			</Entity>
+			<Entity Type="Tank4" Name="A-3">
+				<Position X="-30.0" Y="0.5" Z="-30.0"/>
+				<Rotation X="0.0" Y="90.0" Z="0.0"/>
+			</Entity>
+		</Team>
+		<Team Name="1">
+			<Entity Type="Oberon MkII" Name="B-1">
+				<Position X="30.0" Y="0.5" Z="20.0"/>
+				<Rotation X="0.0" Y="180.0" Z="0.0"/>
+			</Entity>
+			<Entity Type="Tank6" Name="B-2">
+				<Position X="40.0" Y="0.5" Z="40.0"/>
+				<Rotation X="0.0" Y="90.0" Z="0.0"/>
+			</Entity>
+			<Entity Type="Tank4" Name="B-3">
+				<Position X="50.0" Y="0.5" Z="0.0"/>
+				<Rotation X="0.0" Y="0.0" Z="0.0"/>
+			</Entity>
+		</Team>
+	</Entities>
+
+	<Patrol>
+		<Team Name="0">
+			<Point X="10.0f" Z="30.0f"/> 
+			<Point X="15.0f" Z="20.0f"/> 
+			<Point X="30.0f" Z="15.0f"/> 
+			<Point X="20.0f" Z="18.0f"/> 
+			<Point X="10.0f" Z="40.0f"/> 
+		</Team>
+		<Team Name="1">
+			<Point X="5.0f"  Z="15.0f"/>
+			<Point X="15.0f" Z="20.0f"/>
+			<Point X="15.0f" Z="3.0f" />
+			<Point X="6.0f"  Z="15.0f"/>
+			<Point X="10.0f" Z="20.0f"/>
+		</Team>
+	</Patrol>
+
+</Level>

@@ -27,7 +27,11 @@ enum EMessageType
 	Msg_Patrol,
 	Msg_Aim,
 	Msg_Evade,
-	Msg_Hit
+	Msg_Hit,
+	MSg_FindAmmo,
+	Msg_CollectedAmmo,
+	Msg_Help,
+	Msg_Death
 };
 
 // A message contains a type and the UID that sent it.

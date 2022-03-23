@@ -158,6 +158,42 @@ public:
 	// Keep as a virtual function in case of further derivation
 	virtual bool Update( TFloat32 updateTime );
 	
+	std::string GetState()
+	{
+		switch (m_State)
+		{
+		case EState::InActive:
+			return "InActive";
+			break;
+		case EState::Patrol:
+			return "Patrol";
+			break;
+		case EState::Aim:
+			return "Aim";
+			break;
+		case EState::Evade:
+			return "Evade";
+			break;
+		case EState::FindAmmo:
+			return "Search";
+			break;
+		case EState::Help:
+			return "Help";
+			break;
+		default:
+			return "Unknown State";
+			break;
+		}
+	}
+
+	TUInt32 GetTeam() { return m_Team; }
+
+	TFloat32 GetHealth() { return m_HP; }
+	TInt32 GetShellsShot() { return m_ShellsShot; }
+	TInt32 GetShellsAmmo() { return m_ShellsAmmo; }
+
+
+	CCamera* GetCamera() { return m_ChaseCam; }
 
 /////////////////////////////////////
 //	Private interface
@@ -169,6 +205,15 @@ private:
 	void Patrol(float frameTime);
 	void Aim(float frameTime);
 	void Evade(float frameTime);
+	void Hit();
+	void FindAmmo(float frameTime);
+	void Help(float frameTime);
+
+	void SetRandomTarget();
+
+	bool Death(float frameTime);
+
+	CVector3 SelectWaypoint();
 
 	/////////////////////////////////////
 	// Types
@@ -179,7 +224,9 @@ private:
 		InActive,
 		Patrol,
 		Aim,
-		Evade
+		Evade,
+		FindAmmo,
+		Help
 	};
 
 
@@ -189,20 +236,39 @@ private:
 	// The template holding common data for all tank entities
 	CTankTemplate* m_TankTemplate;
 
+	const TFloat32 m_HelpTimerMax = 3.0f;
+
 	// Tank data
 	TUInt32  m_Team;  // Team number for tank (to know who the enemy is)
+	TUInt32  m_ShellsShot = 0;  
+	TUInt32  m_ShellsAmmo = 10;  
 	TFloat32 m_Speed; // Current speed (in facing direction)
-	TInt32   m_HP;    // Current hit points for the tank
+	TFloat32  m_HP;    // Current hit points for the tank
 
 	// Tank state
 	EState   m_State; // Current state
 	TFloat32 m_Timer; // A timer used in the example update function   
+	TFloat32 m_AimTimer;
+	TFloat32 m_DeathTimer = 2.0f;
+	TFloat32 m_DestroyedSpeed = 2.0f;
+	TFloat32 m_DeathTurretSpeed = 100.0f;
+	TFloat32 m_DeathTankSpeed = 50.0f;
+	TFloat32 m_HelpTimer = m_HelpTimerMax;
 
-	bool IsMoving = false;
+	bool m_IsMoving = false;
+	bool m_EvadeStart = false;
+	bool m_Fired = false;
 
-	CVector3 m_PtOne = { Position().x + 30.0f, Position().y, Position().z };
-	CVector3 m_PtTwo = { Position().x - 30.0f, Position().y, Position().z };
+	CVector3 m_PtOne = { Random(-30, 30), Position().y, Random(-30, 30) };
+	CVector3 m_PtTwo = { Random(-30, 30), Position().y, Random(-30, 30) };
 	CVector3 m_Target = m_PtOne;
+	CVector3 m_EnemyTarget;
+
+	CVector3 m_NearestAmmoTarget;
+
+	bool test = false;
+
+	CCamera* m_ChaseCam;
 };
 
 

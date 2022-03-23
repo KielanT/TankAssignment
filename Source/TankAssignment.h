@@ -30,4 +30,10 @@ void RenderSceneText( float updateTime );
 // Update the scene between rendering
 void UpdateScene( float updateTime );
 
+void SpawnAmmoBox(float updateTime);
+
+void SetTanksInactive();
+
+void DestroyLoserTanks(int team);
+
 } // namespace gen
