@@ -170,11 +170,6 @@ bool CTankEntity::Update( TFloat32 updateTime )
 		Matrix().MoveLocalZ(m_Speed * updateTime);
 	}
 
-	
-
-
-
-
 	return true; // Don't destroy the entity
 }
 
@@ -277,7 +272,7 @@ void CTankEntity::Patrol(float frameTime)
 void CTankEntity::Aim(float frameTime)
 {
 	m_Speed = 0.0f;
-	Matrix(2).FaceDirection(m_EnemyTarget);
+	Matrix(2).FaceTarget(m_EnemyTarget);
 	if (m_ShellsAmmo > 0)
 	{
 		if (m_AimTimer < 0.0f)
@@ -318,7 +313,7 @@ void CTankEntity::Evade(float frameTime)
 	if (m_IsMoving)
 	{
 		Matrix().FaceTarget(m_Target);
-		Matrix(2).FaceDirection(m_Target);
+		Matrix(2).FaceTarget(m_Target);
 	}
 
 	if (m_ShellsAmmo <= 0)
@@ -481,7 +476,6 @@ void CTankEntity::FindAmmo(float frameTime)
 						
 					}
 				}
-				
 			}
 				SMessage msg;
 				msg.type = Msg_Patrol;

@@ -76,6 +76,7 @@ const int NumLights = 2;
 CLight*  Lights[NumLights];
 SColourRGBA AmbientLight;
 CCamera* MainCamera;
+CCamera* LoopCamera;
 
 // Sum of recent update times and number of times in the sum - used to calculate
 // average over a given time period
@@ -95,6 +96,11 @@ int teamTwoScore = 0;
 
 string winningTeam = "";
 
+vector<CTankEntity*> TankArray;
+int tankCounter = 0;
+
+CTankEntity* NearestEntity = 0;
+CTankEntity* SelectedEntity = 0;
 //-----------------------------------------------------------------------------
 // Scene management
 //-----------------------------------------------------------------------------
@@ -120,8 +126,6 @@ bool SceneSetup()
 			                        CVector3(Random(-200.0f, 30.0f), 0.0f, Random(40.0f, 150.0f)),
 			                        CVector3(0.0f, Random(0.0f, 2.0f * kfPi), 0.0f) );
 	}
-
-	
 	
 
 	/////////////////////////////
@@ -130,6 +134,9 @@ bool SceneSetup()
 	// Set camera position and clip planes
 	MainCamera = new CCamera(CVector3(0.0f, 30.0f, -100.0f), CVector3(ToRadians(15.0f), 0, 0));
 	MainCamera->SetNearFarClip(1.0f, 20000.0f);
+
+	LoopCamera = MainCamera;
+	LoopCamera->SetNearFarClip(1.0f, 20000.0f);
 
 	// Sunlight and light in building
 	Lights[0] = new CLight(CVector3(-5000.0f, 4000.0f, -10000.0f), SColourRGBA(1.0f, 0.9f, 0.6f), 15000.0f);
@@ -157,6 +164,7 @@ void SceneShutdown()
 	// Release camera
 	delete MainCamera;
 
+	TankArray.clear();
 	// Destroy all entities
 	EntityManager.DestroyAllEntities();
 	EntityManager.DestroyAllTemplates();
@@ -280,6 +288,7 @@ void RenderSceneText( float updateTime )
 
 			if (MainCamera->PixelFromWorldPt(TEntity->Position(), ViewportWidth, ViewportHeight, &x, &y))
 			{
+				
 				outText << TEntity->GetName();
 
 				if (ShowText)
@@ -288,14 +297,22 @@ void RenderSceneText( float updateTime )
 							<< "\nShot: " << TEntity->GetShellsShot() << "\nAmmo: " << TEntity->GetShellsAmmo();
 
 				}
-
-				RenderText(outText.str(), x, y, 0.0f, 0.0f, 0.0f, true);
-				RenderText(outText.str(), x - 2, y - 2, 1.0f, 1.0f, 0.0f, true);
-				outText.str("");
+				if (TEntity == NearestEntity)
+				{
+					RenderText(outText.str(), x, y, 0.5f, 0.5f, 0.0f, true);
+					RenderText(outText.str(), x - 2, y - 2, 1.0f, 0.0f, 0.0f, true);
+					outText.str("");
+				}
+				else
+				{
+					RenderText(outText.str(), x, y, 0.0f, 0.0f, 0.0f, true);
+					RenderText(outText.str(), x - 2, y - 2, 1.0f, 1.0f, 0.0f, true);
+					outText.str("");
+				}
 			}
 		}
 	}
-	
+	EntityManager.EndEnumEntities();
 
 	EntityManager.BeginEnumEntities("", "", "AmmoBox");
 	while (entity = EntityManager.EnumEntity())
@@ -310,6 +327,34 @@ void RenderSceneText( float updateTime )
 		}
 	}
 	EntityManager.EndEnumEntities();
+
+	NearestEntity = 0;
+	TInt32 X, Y;
+	float nearestDistance = 50.0f;
+	EntityManager.BeginEnumEntities("", "", "Tank");
+	while (entity = EntityManager.EnumEntity())
+	{
+		CTankEntity* TEntity = static_cast<CTankEntity*>(entity);
+		if (TEntity != nullptr)
+		{
+
+			//if (MainCamera->PixelFromWorldPt(&entityPixel, entity->Position(), ViewportWidth, ViewportHeight))
+			if (MainCamera->PixelFromWorldPt(entity->Position(), ViewportWidth, ViewportHeight, &X, &Y))
+			{
+				CVector2 MousePixel = { (float)MouseX, (float)MouseY };
+				CVector2 entityPixel = { (float)X,(float)Y };
+
+				float pixelDistance = Distance(MousePixel, entityPixel);
+				if (pixelDistance < nearestDistance)
+				{
+					NearestEntity = TEntity;
+					nearestDistance = pixelDistance;
+				}
+			}
+		}
+	}
+	EntityManager.EndEnumEntities();
+
 }
 
 
@@ -343,19 +388,53 @@ void UpdateScene(float updateTime)
 			}
 		}
 	}
+
 	if (KeyHit(Key_2))
 	{
 		SetTanksInactive();
 	}
 
-	if (KeyHit(Key_3))
+	CEntity* entity;
+	EntityManager.BeginEnumEntities("", "", "Tank");
+	TankArray.clear();
+	while (entity = EntityManager.EnumEntity())
 	{
-		CEntity* entity = EntityManager.GetEntity("A-1");
 		CTankEntity* TEntity = static_cast<CTankEntity*>(entity);
+
 		if (TEntity != nullptr)
 		{
-			MainCamera = TEntity->GetCamera();
+			TankArray.push_back(TEntity);
 		}
+	}
+
+	if (KeyHit(Key_Numpad7))
+	{
+		if (tankCounter <= 0.0f)
+		{
+			tankCounter = TankArray.size() - 1;
+		}
+		else
+		{
+			tankCounter--;
+		}
+		MainCamera = TankArray[tankCounter]->GetCamera();
+	}
+	if (KeyHit(Key_Numpad9))
+	{
+		if (tankCounter >= TankArray.size() - 1)
+		{
+			tankCounter = 0;
+		}
+		else
+		{
+			tankCounter++;
+			
+		}
+		MainCamera = TankArray[tankCounter]->GetCamera();
+	}
+	if (KeyHit(Key_Numpad8))
+	{
+		MainCamera = LoopCamera;
 	}
 
 	if (EntityManager.GetTeamOneScore() >= 3.0f)
@@ -371,6 +450,37 @@ void UpdateScene(float updateTime)
 		winningTeam = "Two";
 		gameOver = false;
 		DestroyLoserTanks(0);
+	}
+
+	
+
+	if (KeyHit(Mouse_LButton) && NearestEntity != nullptr)
+	{
+		SMessage msg;
+		msg.type = Msg_Evade;
+		msg.from = SystemUID;
+		Messenger.SendMessageA(NearestEntity->GetUID(), msg);
+	}
+	
+	if (KeyHit(Mouse_RButton))
+	{
+		
+		if (SelectedEntity != nullptr && SelectedEntity->IsSelected())
+		{
+			TInt32 X, Y;
+			CVector3 mousePoint = MainCamera->WorldPtFromPixel(X, Y, ViewportWidth, ViewportHeight);
+
+			CVector3 rayDirection = mousePoint - MainCamera->Position();
+
+			SelectedEntity->SetTarget({ mousePoint.x, SelectedEntity->Position().y, mousePoint.z});
+			SelectedEntity->SetSelected(false);
+		}
+		if(NearestEntity != nullptr)
+		{
+			SelectedEntity = NearestEntity;
+			SelectedEntity->SetSelected(true);
+		}
+		
 	}
 
 	// Set camera speeds
@@ -413,6 +523,7 @@ void SetTanksInactive()
 			Messenger.SendMessageA(TEntity->GetUID(), msg);
 		}
 	}
+	EntityManager.EndEnumEntities();
 }
 
 void DestroyLoserTanks(int team)

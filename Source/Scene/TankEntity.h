@@ -195,6 +195,11 @@ public:
 
 	CCamera* GetCamera() { return m_ChaseCam; }
 
+	void SetTarget(CVector3 target) { m_Target = target; }
+
+	bool IsSelected() { return m_IsSelected; }
+	void SetSelected(bool selected) { m_IsSelected = selected; }
+
 /////////////////////////////////////
 //	Private interface
 private:
@@ -258,6 +263,7 @@ private:
 	bool m_IsMoving = false;
 	bool m_EvadeStart = false;
 	bool m_Fired = false;
+	bool m_IsSelected = false;
 
 	CVector3 m_PtOne = { Random(-30, 30), Position().y, Random(-30, 30) };
 	CVector3 m_PtTwo = { Random(-30, 30), Position().y, Random(-30, 30) };

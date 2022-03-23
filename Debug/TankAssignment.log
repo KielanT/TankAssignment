@@ -1,7 +1,10 @@
-﻿  TankEntity.cpp
-D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(262,60): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
-D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(262,29): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
-D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(263,60): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
-D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(263,29): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
-D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.cpp(77,33): warning C4244: '=': conversion from 'gen::TInt32' to 'gen::TFloat32', possible loss of data
+﻿  TankAssignment.cpp
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(268,60): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(268,29): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(269,60): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(269,29): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\TankAssignment.cpp(116,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\TankAssignment.cpp(424,19): warning C4018: '>=': signed/unsigned mismatch
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\TankAssignment.cpp(471): warning C4700: uninitialized local variable 'Y' used
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\TankAssignment.cpp(471): warning C4700: uninitialized local variable 'X' used
   TankAssignment.vcxproj -> D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\TankAssignment.exe
