@@ -158,6 +158,7 @@ public:
 	// Keep as a virtual function in case of further derivation
 	virtual bool Update( TFloat32 updateTime );
 	
+	// Return State the tank is currently in
 	std::string GetState()
 	{
 		switch (m_State)
@@ -186,17 +187,25 @@ public:
 		}
 	}
 
+	// Returns the team
 	TUInt32 GetTeam() { return m_Team; }
 
+	// Returns the health
 	TFloat32 GetHealth() { return m_HP; }
+
+	// Returns the ammount of shells shot
 	TInt32 GetShellsShot() { return m_ShellsShot; }
+
+	// Returns the ammount of ammo
 	TInt32 GetShellsAmmo() { return m_ShellsAmmo; }
 
-
+	// Returns the chase camera
 	CCamera* GetCamera() { return m_ChaseCam; }
 
+	// Sets the target to change the target point of where the tank is going to go
 	void SetTarget(CVector3 target) { m_Target = target; }
 
+	// Used for picking to test if the tank has been selected
 	bool IsSelected() { return m_IsSelected; }
 	void SetSelected(bool selected) { m_IsSelected = selected; }
 
@@ -218,7 +227,8 @@ private:
 
 	bool Death(float frameTime);
 
-	CVector3 SelectWaypoint();
+	// Used to select waypoints that are called in from xml
+	CVector3 SelectWaypoint(); 
 
 	/////////////////////////////////////
 	// Types

@@ -135,6 +135,7 @@ bool SceneSetup()
 	MainCamera = new CCamera(CVector3(0.0f, 30.0f, -100.0f), CVector3(ToRadians(15.0f), 0, 0));
 	MainCamera->SetNearFarClip(1.0f, 20000.0f);
 
+	// Creates a camera for switching to all the chase cams
 	LoopCamera = MainCamera;
 	LoopCamera->SetNearFarClip(1.0f, 20000.0f);
 
@@ -263,11 +264,13 @@ void RenderSceneText( float updateTime )
 		outText.str("");
 	}
 
+	// Shows the score of each team
 	outText << "Team One Score:  " << EntityManager.GetTeamOneScore() << "\nTeam Two Score: " << EntityManager.GetTeamTwoScore();
 	RenderText(outText.str(), 500, 10, 0.0f, 0.0f, 0.0f);
 	RenderText(outText.str(), 498, 8, 1.0f, 1.0f, 0.0f);
 	outText.str("");
 	
+	// Displays game over text
 	if (gameOver)
 	{
 		outText << "Team " << winningTeam << " Wins!";
@@ -276,6 +279,7 @@ void RenderSceneText( float updateTime )
 		outText.str("");
 	}
 	
+	// Displays text for the tanks
 	CEntity* entity;
 	int x, y;
 	EntityManager.BeginEnumEntities("", "", "Tank");
@@ -314,6 +318,7 @@ void RenderSceneText( float updateTime )
 	}
 	EntityManager.EndEnumEntities();
 
+	// Displays text for the ammo boxes
 	EntityManager.BeginEnumEntities("", "", "AmmoBox");
 	while (entity = EntityManager.EnumEntity())
 	{
@@ -328,6 +333,7 @@ void RenderSceneText( float updateTime )
 	}
 	EntityManager.EndEnumEntities();
 
+	// Mouse picking for selecting the nearest tank
 	NearestEntity = 0;
 	TInt32 X, Y;
 	float nearestDistance = 50.0f;
@@ -338,7 +344,6 @@ void RenderSceneText( float updateTime )
 		if (TEntity != nullptr)
 		{
 
-			//if (MainCamera->PixelFromWorldPt(&entityPixel, entity->Position(), ViewportWidth, ViewportHeight))
 			if (MainCamera->PixelFromWorldPt(entity->Position(), ViewportWidth, ViewportHeight, &X, &Y))
 			{
 				CVector2 MousePixel = { (float)MouseX, (float)MouseY };
@@ -363,13 +368,15 @@ void UpdateScene(float updateTime)
 {
 	// Call all entity update functions
 	EntityManager.UpdateAllEntities(updateTime);
-	SpawnAmmoBox(updateTime);
+	SpawnAmmoBox(updateTime); // Call the spawn functions
 
+	// Show or hide the text for the tanks
 	if (KeyHit(Key_0))
 	{
 		ShowText = !ShowText;
 	}
 
+	// Starts the game
 	if (KeyHit(Key_1))
 	{
 		SMessage msg;
@@ -389,11 +396,13 @@ void UpdateScene(float updateTime)
 		}
 	}
 
+	// Deactives the tanks
 	if (KeyHit(Key_2))
 	{
 		SetTanksInactive();
 	}
 
+	// Creates an array of all the tanks for going through the chase cams
 	CEntity* entity;
 	EntityManager.BeginEnumEntities("", "", "Tank");
 	TankArray.clear();
@@ -409,9 +418,10 @@ void UpdateScene(float updateTime)
 
 	if (KeyHit(Key_Numpad7))
 	{
+		// Goes backwards through the tank array and sets the chase cam
 		if (tankCounter <= 0.0f)
 		{
-			tankCounter = TankArray.size() - 1;
+			tankCounter = TankArray.size() - 1; // rotates to the last tank
 		}
 		else
 		{
@@ -421,9 +431,10 @@ void UpdateScene(float updateTime)
 	}
 	if (KeyHit(Key_Numpad9))
 	{
+		// Goes forwards through the tank array and sets the chase cam
 		if (tankCounter >= TankArray.size() - 1)
 		{
-			tankCounter = 0;
+			tankCounter = 0;  // rotates to the first tank
 		}
 		else
 		{
@@ -434,11 +445,13 @@ void UpdateScene(float updateTime)
 	}
 	if (KeyHit(Key_Numpad8))
 	{
-		MainCamera = LoopCamera;
+		MainCamera = LoopCamera; // Resets the main camera
 	}
 
+	// Sets the game over text depending on what team has won
 	if (EntityManager.GetTeamOneScore() >= 3.0f)
 	{
+		
 		SetTanksInactive();
 		winningTeam = "One";
 		gameOver = true;
@@ -453,7 +466,7 @@ void UpdateScene(float updateTime)
 	}
 
 	
-
+	// Set the tank to an evade state when selected
 	if (KeyHit(Mouse_LButton) && NearestEntity != nullptr)
 	{
 		SMessage msg;
@@ -462,9 +475,10 @@ void UpdateScene(float updateTime)
 		Messenger.SendMessageA(NearestEntity->GetUID(), msg);
 	}
 	
+	// Doesn't work correctly some missing code
+	// Selected if nearest tank and if it has been selected pick a point for the tank to move to
 	if (KeyHit(Mouse_RButton))
 	{
-		
 		if (SelectedEntity != nullptr && SelectedEntity->IsSelected())
 		{
 			TInt32 X, Y;
@@ -480,12 +494,11 @@ void UpdateScene(float updateTime)
 			SelectedEntity = NearestEntity;
 			SelectedEntity->SetSelected(true);
 		}
-		
 	}
 
 	// Set camera speeds
-		// Key F1 used for full screen toggle
-		if (KeyHit(Key_F2)) CameraMoveSpeed = 5.0f;
+	// Key F1 used for full screen toggle
+	if (KeyHit(Key_F2)) CameraMoveSpeed = 5.0f;
 	if (KeyHit(Key_F3)) CameraMoveSpeed = 40.0f;
 
 	// Move the camera
@@ -495,6 +508,7 @@ void UpdateScene(float updateTime)
 
 void SpawnAmmoBox(float updateTime)
 {
+	// Spawns the ammo box every couple seconds between min time and max time at random position
 	if (ammoSpawnTimer < 0.0f)
 	{
 		EntityManager.CreateAmmoBox("AmmoBox", "AmmoBox", CVector3(Random(-30.0f, 30.0f), 30.0f, Random(-30.0f, 30.0f)));
@@ -508,6 +522,7 @@ void SpawnAmmoBox(float updateTime)
 
 void SetTanksInactive()
 {
+	// Sets all the tanks to inactive
 	SMessage msg;
 	msg.type = Msg_Inactive;
 	msg.from = SystemUID;
@@ -528,6 +543,7 @@ void SetTanksInactive()
 
 void DestroyLoserTanks(int team)
 {
+	// Destroy all loser tanks if they exist
 	SMessage msg;
 	msg.type = Msg_Death;
 	msg.from = SystemUID;

@@ -79,6 +79,7 @@ CTankEntity::CTankEntity
 	m_Timer = 0.0f;
 	m_AimTimer = 1.0f;
 
+	// Creates the chase cam thats used for this tank
 	m_ChaseCam = new CCamera({ Position().x, Position().y + 3.0f, Position().z });
 	m_ChaseCam->SetNearFarClip(1.0f, 20000.0f);
 }
@@ -89,12 +90,13 @@ CTankEntity::CTankEntity
 // Return false if the entity is to be destroyed
 bool CTankEntity::Update( TFloat32 updateTime )
 {
-	CMatrix4x4 tankMatrix = Matrix(1) * Matrix();
-	CVector3 facingVector = tankMatrix.ZAxis();
+
+	CMatrix4x4 tankMatrix = Matrix(1) * Matrix(); // Returns the tank matrix
+	CVector3 facingVector = tankMatrix.ZAxis(); // Used for getting the facing vector
 	facingVector.Normalise();
 
-	m_ChaseCam->Position() = Position() - facingVector * 15.0f + tankMatrix.YAxis() * 3.0f;
-	m_ChaseCam->Matrix().FaceTarget(tankMatrix.Position());
+	m_ChaseCam->Position() = Position() - facingVector * 15.0f + tankMatrix.YAxis() * 3.0f; // Sets the position of the chase cam behind the tank  
+	m_ChaseCam->Matrix().FaceTarget(tankMatrix.Position()); // Sets the camera to always face forwards with the tank
 
 	// Fetch any messages
 	SMessage msg;
@@ -135,7 +137,7 @@ bool CTankEntity::Update( TFloat32 updateTime )
 				break;
 		}
 	}
-
+	// Runs functions and set variables based on the current state
 	if (m_State == EState::InActive)
 	{
 		m_IsMoving = false;
@@ -161,13 +163,13 @@ bool CTankEntity::Update( TFloat32 updateTime )
 		Help(updateTime);
 	}
 
-	if (m_HP <= 0) return Death(updateTime);
+	if (m_HP <= 0) return Death(updateTime); // When the tanks die call the death function
 
 	//// Perform movement...
 	//// Move along local Z axis scaled by update time
 	if (m_IsMoving)
 	{
-		Matrix().MoveLocalZ(m_Speed * updateTime);
+		Matrix().MoveLocalZ(m_Speed * updateTime); // Always moves the tanks forward if variable is true
 	}
 
 	return true; // Don't destroy the entity
@@ -175,45 +177,37 @@ bool CTankEntity::Update( TFloat32 updateTime )
 
 void CTankEntity::Patrol(float frameTime)
 {
-	if (!m_IsMoving)
+	if (!m_IsMoving) // when not moving set the target and set vmoving to true
 	{		
 		m_Target = m_PtTwo;
 		m_IsMoving = true;
 	}
 	else
 	{
-		Matrix(2).RotateLocalY(m_TankTemplate->GetTurretTurnSpeed() * frameTime);
+		Matrix(2).RotateLocalY(m_TankTemplate->GetTurretTurnSpeed() * frameTime); // Rotates the turrent when when partrolling
 
-		CMatrix4x4 turretMatrix = Matrix(2) * Matrix();
+		CMatrix4x4 turretMatrix = Matrix(2) * Matrix(); // Gets the turrents matrix
 
-		CVector3 facingVector = turretMatrix.ZAxis();
+		CVector3 facingVector = turretMatrix.ZAxis(); 
 		facingVector.Normalise();
-		CVector3 endPos = Position() + facingVector * 30.0f;
+		CVector3 endPos = Position() + facingVector * 30.0f; // Raycast for the tank from the turrents facing vector
 
-		/*if (!test)
-		{
-			EntityManager.CreateEntity("Tree", "Tree" + m_Team, endPos);
-			test = true;
-		}
-		else
-		{
-			EntityManager.GetEntity("Tree" + m_Team)->Matrix().SetPosition(endPos);
-		}*/
-
+		// Loops through all the entities that have the tank template
 		CEntity* entity;
 		EntityManager.BeginEnumEntities("", "", "Tank");
 		while (entity = EntityManager.EnumEntity())
 		{
-			CTankEntity* TEntity = static_cast<CTankEntity*>(entity);
-			if (TEntity != nullptr && m_Team != TEntity->GetTeam())
+			CTankEntity* TEntity = static_cast<CTankEntity*>(entity); // Casts the entity to the tank object to get access to its functions
+			if (TEntity != nullptr && m_Team != TEntity->GetTeam()) // Checks if the object is a tank and checks if its an opponents tank
 			{
-				if (Distance(endPos, TEntity->Position()) < 25.0f)
+				if (Distance(endPos, TEntity->Position()) < 25.0f) // Checks if the enemy tank is within the raycast
 				{
+					// Sends an aim message to its self
 					SMessage msg;
-					msg.type = Msg_Aim;
+					msg.type = Msg_Aim; 
 					msg.from = GetUID();
 
-					m_EnemyTarget = TEntity->Position();
+					m_EnemyTarget = TEntity->Position(); // Sets the position that the enemy is at
 
 					Messenger.SendMessageA(GetUID(), msg);
 				}
@@ -221,14 +215,15 @@ void CTankEntity::Patrol(float frameTime)
 		}
 		EntityManager.EndEnumEntities();
 
+		// Normalise the Z and X axis
 		Matrix().ZAxis().Normalise();
 		Matrix().XAxis().Normalise();
-		CVector3 target = m_Target - Position();
-		target.Normalise();
+		CVector3 target = m_Target - Position(); // Sets the target used for rotating 
+		target.Normalise(); 
 
-		float productX = Dot(Matrix().XAxis(), target);
-		float productZ = Dot(Matrix().ZAxis(), target);
-		float angle = acos(productZ);
+		float productX = Dot(Matrix().XAxis(), target); // gets the dot product of x used for checking if it needs to turn left or right
+		float productZ = Dot(Matrix().ZAxis(), target); // Product used for getting the angle
+		float angle = acos(productZ); // getting the angle used for turning speed 
 
 		float turnSpeed = ToRadians(m_TankTemplate->GetTurnSpeed());
 		if (productX > 0)
@@ -238,10 +233,11 @@ void CTankEntity::Patrol(float frameTime)
 		}
 		else
 		{
+			// Turn Left
 			Matrix().RotateY(-Min(turnSpeed, angle));
 		}
 
-		if (Distance(Position(), m_Target) > 2.0f)
+		if (Distance(Position(), m_Target) > 2.0f) // Increases the speed if not in range
 		{
 			m_Speed += m_TankTemplate->GetAcceleration() * frameTime;
 			if (m_Speed > m_TankTemplate->GetMaxSpeed())
@@ -251,12 +247,14 @@ void CTankEntity::Patrol(float frameTime)
 		}
 		else
 		{
-			m_Speed -= m_TankTemplate->GetAcceleration() * frameTime;
+			// Stop speeding if the tank is in range
+			m_Speed -= m_TankTemplate->GetAcceleration() * frameTime; 
 			if (m_Speed < 0.0f)
 			{
+				// Selects the next waypoints
 				if (m_Target == m_PtOne)
 				{
-					m_PtTwo = SelectWaypoint();
+					m_PtTwo = SelectWaypoint(); 
 					m_Target = m_PtTwo;
 				}
 				else if (m_Target == m_PtTwo)
@@ -271,18 +269,18 @@ void CTankEntity::Patrol(float frameTime)
 
 void CTankEntity::Aim(float frameTime)
 {
-	m_Speed = 0.0f;
-	Matrix(2).FaceTarget(m_EnemyTarget);
-	if (m_ShellsAmmo > 0)
+	m_Speed = 0.0f; // Sets the movement to speed to not move
+	Matrix(2).FaceTarget(m_EnemyTarget); // Faces the target
+	if (m_ShellsAmmo > 0) // If tank has shells then start aim timer
 	{
 		if (m_AimTimer < 0.0f)
 		{
-			if (!m_Fired)
+			if (!m_Fired) // Shots the shell when the timer has ran out
 			{
 				EntityManager.CreateShell("Shell Type 1", m_EnemyTarget, this, "", { Position().x, 1.8f, Position().z });
 				m_ShellsShot++;
 				m_ShellsAmmo--;
-				m_AimTimer = 1.0f;
+				m_AimTimer = 1.0f; // Resets the timer
 				m_Fired = true;
 				SMessage msg;
 				msg.type = Msg_Evade;
@@ -298,6 +296,7 @@ void CTankEntity::Aim(float frameTime)
 	}
 	else
 	{
+		// If ran out of ammo then find ammo
 		SMessage msg;
 		msg.type = MSg_FindAmmo;
 		msg.from = SystemUID;
@@ -308,15 +307,15 @@ void CTankEntity::Aim(float frameTime)
 void CTankEntity::Evade(float frameTime)
 {
 	m_Fired = false;
-	SetRandomTarget();
+	SetRandomTarget(); // Sets random target
 	m_EvadeStart = true;
-	if (m_IsMoving)
+	if (m_IsMoving) // If tank is moving face the target
 	{
-		Matrix().FaceTarget(m_Target);
-		Matrix(2).FaceTarget(m_Target);
+		Matrix().FaceTarget(m_Target); // Tank face target
+		Matrix(2).FaceTarget(m_Target); // Turrent face target
 	}
 
-	if (m_ShellsAmmo <= 0)
+	if (m_ShellsAmmo <= 0) // if ran out of shells then find ammo
 	{
 		SMessage msg;
 		msg.type = MSg_FindAmmo;
@@ -354,6 +353,7 @@ void CTankEntity::Evade(float frameTime)
 	}
 	else
 	{
+		// Sets the variables and states
 		m_IsMoving = false;
 		m_EvadeStart = false;
 		m_State = EState::Patrol;
@@ -378,6 +378,7 @@ void CTankEntity::Evade(float frameTime)
 
 void CTankEntity::Hit()
 {
+	// If hit then take damage and send a help msg to all team tanks
 	m_HP -= m_TankTemplate->GetShellDamage();
 	SMessage msg;
 	msg.type = Msg_Help;
@@ -400,11 +401,12 @@ void CTankEntity::Hit()
 
 void CTankEntity::FindAmmo(float frameTime)
 {
+	// Finds the nearest ammo
 	CEntity* entity;
 	CEntity* entityLoop;
 	CVector3 nearestAmmoPos = CVector3(Random(-30.0f, 30.0f), Position().y, Random(-30.0f, 30.0f));
 	EntityManager.BeginEnumEntities("", "", "AmmoBox");
-	float nearest = 20.0f;
+	float nearest = 20.0f; 
 	while (entityLoop = EntityManager.EnumEntity())
 	{
 		CAmmoBoxEntity* AEntity = static_cast<CAmmoBoxEntity*>(entityLoop);
@@ -421,7 +423,7 @@ void CTankEntity::FindAmmo(float frameTime)
 
 	if (!m_IsMoving)
 	{
-		m_NearestAmmoTarget = nearestAmmoPos;
+		m_NearestAmmoTarget = nearestAmmoPos; // Sets the target to the ammo to the nearest ammo
 		m_IsMoving = true;
 	}
 	else
@@ -463,12 +465,14 @@ void CTankEntity::FindAmmo(float frameTime)
 			{
 				if (entity != nullptr)
 				{
+					// If in range of ammo box 
 					CAmmoBoxEntity* AEntity = static_cast<CAmmoBoxEntity*>(entity);
 					if (AEntity != nullptr)
 					{
-						m_ShellsAmmo = 10;
-						entity = nullptr;
-						nearestAmmoPos = CVector3(Random(-30.0f, 30.0f), Position().y, Random(-30.0f, 30.0f));
+						m_ShellsAmmo = 10; // Set ammo
+						entity = nullptr; // resets entity
+						nearestAmmoPos = CVector3(Random(-30.0f, 30.0f), Position().y, Random(-30.0f, 30.0f)); // resets ammo 
+						// Sends message to the ammo box letting it know to destroy its self
 						SMessage msg1;
 						msg1.type = Msg_CollectedAmmo;
 						msg1.from = GetUID();
@@ -477,6 +481,7 @@ void CTankEntity::FindAmmo(float frameTime)
 					}
 				}
 			}
+			// GO back to patrol state
 				SMessage msg;
 				msg.type = Msg_Patrol;
 				msg.from = SystemUID;
@@ -489,9 +494,9 @@ void CTankEntity::FindAmmo(float frameTime)
 void CTankEntity::Help(float frameTime)
 {
 	m_Speed = 0.0f;
-	if (m_HelpTimer < 0.0f)
+	if (m_HelpTimer < 0.0f) 
 	{
-		// Go back to patrol
+		// Go back to patrol when timer runs out
 		SMessage msg;
 		msg.type = Msg_Patrol;
 		msg.from = SystemUID;
@@ -532,7 +537,7 @@ void CTankEntity::SetRandomTarget()
 {
 	if (!m_EvadeStart)
 	{
-		m_Target = CVector3(Random(-40.0f, 40.0f), Position().y, Random(-40.0f, 40.0f)); // TODO make this return a different random vector each time
+		m_Target = CVector3(Random(-40.0f, 40.0f), Position().y, Random(-40.0f, 40.0f)); 
 	}
 }
 
@@ -540,7 +545,7 @@ bool CTankEntity::Death(float frameTime)
 {
 	if (m_DeathTimer < 0.0f)
 	{
-		
+		// When timer is up set the score and remove the tank
 		if (m_Team == 0)
 		{
 			EntityManager.TeamTwoScore();
@@ -553,6 +558,7 @@ bool CTankEntity::Death(float frameTime)
 	}
 	else
 	{
+		// Destroy the tank
 		m_DeathTimer -= frameTime;
 		Matrix(2).MoveLocalY(m_DestroyedSpeed * frameTime);
 		Matrix(2).RotateLocalX(m_DeathTurretSpeed * frameTime);
@@ -565,7 +571,7 @@ bool CTankEntity::Death(float frameTime)
 
 CVector3 CTankEntity::SelectWaypoint()
 {
-	return EntityManager.GetPatrolPoints(m_Team).PatrolPoints;
+	return EntityManager.GetPatrolPoints(m_Team).PatrolPoints; // Gets a patrol point from the entity manager
 }
 
 

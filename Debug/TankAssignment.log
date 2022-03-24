@@ -1,10 +1,37 @@
-﻿  TankAssignment.cpp
-D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(268,60): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
-D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(268,29): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
-D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(269,60): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
-D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(269,29): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+﻿  ParseLevel.cpp
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(278,60): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(278,29): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(279,60): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(279,29): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+  AmmoBoxEntity.cpp
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(278,60): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(278,29): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(279,60): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(279,29): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+  EntityManager.cpp
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(278,60): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(278,29): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(279,60): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(279,29): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+  ShellEntity.cpp
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(278,60): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(278,29): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(279,60): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(279,29): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+  TankEntity.cpp
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(278,60): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(278,29): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(279,60): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(279,29): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.cpp(77,33): warning C4244: '=': conversion from 'gen::TInt32' to 'gen::TFloat32', possible loss of data
+  TankAssignment.cpp
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(278,60): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(278,29): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(279,60): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\Scene\TankEntity.h(279,29): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
 D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\TankAssignment.cpp(116,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\TankAssignment.cpp(424,19): warning C4018: '>=': signed/unsigned mismatch
-D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\TankAssignment.cpp(471): warning C4700: uninitialized local variable 'Y' used
-D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\TankAssignment.cpp(471): warning C4700: uninitialized local variable 'X' used
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\TankAssignment.cpp(435,19): warning C4018: '>=': signed/unsigned mismatch
+  Generating Code...
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\TankAssignment.cpp(485): warning C4700: uninitialized local variable 'Y' used
+D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\Source\TankAssignment.cpp(485): warning C4700: uninitialized local variable 'X' used
   TankAssignment.vcxproj -> D:\Documents\UCLan Year Three\Game Dev 2\Assignment\TankAssignment\TankAssignment.exe

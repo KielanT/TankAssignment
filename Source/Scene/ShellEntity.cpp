@@ -48,13 +48,13 @@ CShellEntity::CShellEntity
 ) : CEntity( entityTemplate, UID, name, position, rotation, scale )
 {
 	// Initialise any shell data you add
-	m_Target = target;
-	m_Timer = 3.0f;
-	m_ParentEntity = ParentEntity;
+	m_Target = target; // Sets the target of the shell to move to
+	m_Timer = 3.0f; // Lifetime timer
+	m_ParentEntity = ParentEntity; // Sets the parent entity
 
 	if (m_ParentEntity != nullptr)
 	{
-		m_Team = m_ParentEntity->GetTeam();
+		m_Team = m_ParentEntity->GetTeam(); // Sets the team of the shell
 	}
 }
 
@@ -64,9 +64,10 @@ CShellEntity::CShellEntity
 // Return false if the entity is to be destroyed
 bool CShellEntity::Update( TFloat32 updateTime )
 {
-	Matrix().MoveLocalZ(10 * updateTime);
-	Matrix().FaceTarget(m_Target, Matrix().YAxis());
+	Matrix().MoveLocalZ(10 * updateTime); // Moves the shell
+	Matrix().FaceTarget(m_Target, Matrix().YAxis()); // Sets the shell to face direction
 
+	// Loops through checking the nearest tank and causing damage if in range
 	CEntity* entity;
 	EntityManager.BeginEnumEntities("", "", "Tank");
 	while (entity = EntityManager.EnumEntity())
@@ -76,6 +77,7 @@ bool CShellEntity::Update( TFloat32 updateTime )
 		{
 			if (Distance(Position(), TEntity->Position()) < 5.0f)
 			{
+				// Tells the tank its been hit
 				SMessage msg;
 				msg.type = Msg_Hit;
 				msg.from = GetUID();
@@ -87,9 +89,7 @@ bool CShellEntity::Update( TFloat32 updateTime )
 	}
 	EntityManager.EndEnumEntities();
 
-	
-
-
+	// When timer runs out destroys itself
 	if (m_Timer < 0.0f)
 	{
 		return false;

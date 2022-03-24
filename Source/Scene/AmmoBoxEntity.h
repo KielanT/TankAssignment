@@ -19,13 +19,13 @@ namespace gen
 			const string& type, const string& name, const string& meshFilename, TFloat32 gravity
 		) : CEntityTemplate(type, name, meshFilename)
 		{
-			m_Gravity = gravity;
+			m_Gravity = gravity; // Sets the gravity which is the speed the ammo box should fall at
 		}
 
-		TFloat32 GetGravity() { return m_Gravity; }
+		TFloat32 GetGravity() { return m_Gravity; } // Returns the gravity var
 
 	private:
-		TFloat32 m_Gravity;
+		TFloat32 m_Gravity; 
 	};
 
 	class CAmmoBoxEntity : public CEntity

@@ -14,16 +14,18 @@ namespace gen
 		CAmmoBoxTemplate* ammoTemplate, TEntityUID UID, const string& name, const CVector3& position, const CVector3& rotation, const CVector3& scale
 	) : CEntity(ammoTemplate, UID, name, position, rotation, scale)
 	{
-		gravity = ammoTemplate->GetGravity();
+		gravity = ammoTemplate->GetGravity(); // Sets the gravity for the ammo box
 	}
 
 	bool CAmmoBoxEntity::Update(TFloat32 updateTime)
 	{
+		// if not at ground level, fall to ground
 		if (Position().y > 2.0f)
 		{
 			Matrix().MoveLocalY(gravity * updateTime);
 		}
 
+		// if collected destroy its self
 		SMessage msg;
 		while (Messenger.FetchMessage(GetUID(), &msg))
 		{
